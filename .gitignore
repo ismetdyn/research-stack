@@ -1,0 +1,30 @@
+# Secrets
+.env
+.env.*
+!.env.example
+config/secrets/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Runtime data
+data/
+logs/
+backups/
+
+# Research files
+*.pdf
+*.epub
+
+# Generated
+exports/*
+!exports/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store

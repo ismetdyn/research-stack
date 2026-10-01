@@ -1,0 +1,56 @@
+name: Desktop RHI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  linux-software-renderer:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        # Harvester komutları (cmake -S desktop, -s tests) apps/harvester'ı kök kabul eder.
+        working-directory: apps/harvester
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Install native runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes \
+            libgl1-mesa-dev \
+            mesa-vulkan-drivers \
+            ripgrep \
+            vulkan-validationlayers \
+            xvfb
+      - name: Synchronize Python environment
+        run: uv sync --frozen
+      - name: Configure native client
+        run: |
+          cmake -S desktop -B build/desktop \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DHARVESTER_DEPENDENCY_PROVIDER=BUNDLED
+      - name: Build native client
+        run: cmake --build build/desktop --parallel
+      - name: Run deterministic tests
+        run: |
+          ctest --test-dir build/desktop --output-on-failure
+          uv run python -m unittest discover -s tests -v
+      - name: Enforce renderer-neutral UI/application boundary
+        run: |
+          ! rg -n '#include <(GL|SDL3|vulkan)/' \
+            desktop/include/harvester/app \
+            desktop/include/harvester/ui \
+            desktop/src/desktop_app \
+            desktop/src/ui_renderer_rhi
+          git diff --check
+      - name: Run OpenGL and Lavapipe UI smokes
+        run: |
+          export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.x86_64.json
+          xvfb-run -a ./build/desktop/sdl3_vulkan_wsi_smoke
+          xvfb-run -a ./build/desktop/rhi_vulkan_runtime_smoke
+          xvfb-run -a ./build/desktop/rhi_vulkan_ui_smoke
+          LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a \
+            ./build/desktop/harvester_desktop --renderer=opengl --frames 5
+          xvfb-run -a ./build/desktop/harvester_desktop \
+            --renderer=vulkan --frames 5

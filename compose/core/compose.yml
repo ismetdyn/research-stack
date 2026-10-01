@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: docker.io/pgvector/pgvector:pg17
+    container_name: research-postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - research-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U research -d research"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  grobid:
+    image: docker.io/grobid/grobid:0.9.1-crf
+    container_name: research-grobid
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8070:8070"
+      - "127.0.0.1:8071:8071"
+
+volumes:
+  research-postgres-data:

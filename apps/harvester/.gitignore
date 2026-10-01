@@ -1,0 +1,19 @@
+# Python environments and bytecode
+.venv/
+__pycache__/
+*.py[cod]
+
+# Local configuration
+.env
+.env.*
+!.env.example
+
+# Native build output and dependency caches
+build/
+cmake-build-*/
+compile_commands.json
+.cache/
+
+# IDE state
+.idea/
+.vscode/

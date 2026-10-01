@@ -28,3 +28,9 @@ exports/*
 
 # OS
 .DS_Store
+
+# Local tool/runtime state and manual snapshots
+.serena/
+imgui.ini
+*.bak
+*.sqlite
